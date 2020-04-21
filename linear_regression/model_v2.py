@@ -1,4 +1,6 @@
 import configparser
+import sys
+import matplotlib.pyplot as plt
 
 
 class LinearRegressionModel:
@@ -9,6 +11,7 @@ class LinearRegressionModel:
         self.km = X
         self.price = Y
         self.length_dataset = len(self.km)
+        self.max_value = max(*self.km, *self.price)
 
         # Regression coefficients
         self.alpha = int(self.config["UNTRAINED"]["alpha"])
@@ -16,26 +19,25 @@ class LinearRegressionModel:
 
         # model parameters
         self.learning_rate = float(self.config["UNTRAINED"]["learning_rate"])
-        self.max_loop = 1000
+        self.max_loop = 10_000
 
     def scale_feature(self):
-        max_value = max(*self.km, *self.price)
-        self.km = [km / max_value for km in self.km]
+        self.km = [km / self.max_value for km in self.km]
+
+    def hypothesis(self, x):
+        return self.alpha * x + self.beta
 
     def prediction_list(self):
         return [self.hypothesis(x) for x in self.km]
 
     def error_list(self):
-        return [self.hypothesis(x) - y for x, y in zip(self.km, self.price)]
-
-    def hypothesis(self, x):
-        return self.alpha * x + self.beta
+        return [pred - y for pred, y in zip(self.prediction_list(), self.price)]
 
     def gradient_alpha(self):
         return sum([cost * km for cost, km in zip(self.error_list(), self.km)])
 
     def gradient_beta(self):
-        return sum(self.error_list())
+        return sum([cost for cost in self.error_list()])
 
     def train(self):
         coeff = self.learning_rate / self.length_dataset
@@ -45,7 +47,7 @@ class LinearRegressionModel:
 
             self.alpha -= update_alpha
             self.beta -= update_beta
-            print(f"alpha: {self.alpha}, beta: {self.beta}")
+        self.alpha /= self.max_value
 
     def save(self):
         self.config["TRAINED"]["alpha"] = str(self.alpha)
@@ -83,7 +85,21 @@ def get_default_config():
     return config
 
 
-def main(dataset):
+def plot_regression(data, model):
+    plt.xlabel("kilometers")
+    plt.ylabel("price")
+    plt.scatter(data["km"], data["price"])
+    x = [0, 250_000]
+    y = list(map(model.hypothesis, x))
+    plt.plot(x, y)
+    plt.show()
+
+
+def print_usage():
+    print("\nUsage:\npython train.py --dataset <path/to/dataset> [--plot]\n")
+
+
+def main(dataset, plot_option):
     try:
         data = parse_dataset(dataset)
     except Exception as e:
@@ -94,6 +110,17 @@ def main(dataset):
     linear_model.train()
     linear_model.save()
 
+    if plot_option:
+        plot_regression(data, linear_model)
+
 
 if __name__ == "__main__":
-    main("./data_linear_reg.csv")
+    if len(sys.argv) < 3:
+        print_usage()
+        exit(1)
+    dataset_path = sys.argv[2]
+    try:
+        plot_option = sys.argv[3] == "--plot"
+    except IndexError:
+        plot_option = False
+    main("./data_linear_reg.csv", plot_option)
