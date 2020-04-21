@@ -1,6 +1,9 @@
 import sys
 import configparser
-from plot import plot_dataset, main as truc
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# from plot import plot_data_and_regression
 
 
 class Model:
@@ -9,14 +12,13 @@ class Model:
         self.alpha = int(self.config["UNTRAINED"]["alpha"])
         self.beta = int(self.config["UNTRAINED"]["beta"])
         self.learning_rate = float(self.config["UNTRAINED"]["learning_rate"])
-        # self.theta = [[self.beta], [self.alpha]]
 
         self.dataset_len = len(km_list)
         self.price = price_list
         # self.km = [[1, km] for km in km_list]
         self.km = km_list
         self.max = max_x
-        self.max_loop = 100
+        self.max_loop = 2000
 
     def train(self):
         for _ in range(self.max_loop):
@@ -28,7 +30,6 @@ class Model:
 
             self.beta = self.beta - tmp_beta
             self.alpha = self.alpha - tmp_alpha
-            print(self.beta, self.alpha / self.max)
 
     def compute_cost(self):
         theta_0 = 0
@@ -91,13 +92,23 @@ def main(dataset):
         exit(f"Error : {e}")
 
     # Plot the dataset
-    truc()
     max_km = max(data["km"])
-    data["km"] = [k / max_km for k in data["km"]]
-    data["price"] = [k / max_km for k in data["price"]]
+    data["km"] = [k / 240 for k in data["km"]]
+    data["price"] = [k / 8.29 for k in data["price"]]
 
     model = Model(data["km"], data["price"], max_km)
     model.train()
+
+    dataset = pd.read_csv("./data_linear_reg.csv")
+    plt.scatter(dataset.km, dataset.price)
+    # linera regression plot.
+    x = [x for x in range(0, 240000, 10)]
+    y = list(map(model.hypothesis, x))
+    plt.plot(x, y)
+    # create plot
+
+    plt.show()
+
     model.save()
 
 

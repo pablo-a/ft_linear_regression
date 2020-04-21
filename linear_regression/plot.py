@@ -4,17 +4,14 @@ import matplotlib.pyplot as plt
 import configparser
 
 
-def main():
-    data = parse_dataset("./data_linear_reg.csv")
-    plot_dataset(data)
-    # plot_regression(data)
-    plt.show()
-
-
-def plot_dataset(data):
+def plot_data_and_regression(hypo):
     # dic to pandas Dataframe.
-    dataset = pd.read_csv("data_linear_reg.csv")
+    dataset = pd.read_csv("./data_linear_reg.csv")
     plt.scatter(dataset.km, dataset.price)
+    # linera regression plot.
+    x = [x for x in range(0, 240000, 10)]
+    y = list(map(hypo, x))
+    plt.plot(x, y)
     # create plot
 
     plt.show()
@@ -22,13 +19,13 @@ def plot_dataset(data):
 
 def plot_regression(data):
     config = get_default_config()
-    alpha = float(config["DEFAULT"]["Alpha"])
-    beta = float(config["DEFAULT"]["Beta"])
+    alpha = float(config["TRAINED"]["Alpha"])
+    beta = float(config["TRAINED"]["Beta"])
 
     min_x = min(data["km"])
     max_x = max(data["km"])
-    x_list = [min_x, max_x]
 
+    x_list = [min_x, max_x]
     y_list = map(lambda x: alpha + x + beta, x_list)
     dataset = pd.DataFrame(y_list, x_list)
 
