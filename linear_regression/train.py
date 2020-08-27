@@ -8,10 +8,10 @@ class LinearRegressionModel:
         self.config = get_default_config()
 
         # Dataset
-        self.km = X
-        self.price = Y
-        self.length_dataset = len(self.km)
-        self.max_value = max(*self.km, *self.price)
+        self.kilometer_list = X
+        self.price_list = Y
+        self.length_dataset = len(self.kilometer_list)
+        self.max_value = max(*self.kilometer_list, *self.price_list)
 
         # Regression coefficients
         self.alpha = int(self.config["UNTRAINED"]["alpha"])
@@ -22,19 +22,19 @@ class LinearRegressionModel:
         self.max_loop = 10_000
 
     def scale_feature(self):
-        self.km = [km / self.max_value for km in self.km]
+        self.kilometer_list = [km / self.max_value for km in self.kilometer_list]
 
     def hypothesis(self, x):
         return self.alpha * x + self.beta
 
     def prediction_list(self):
-        return [self.hypothesis(x) for x in self.km]
+        return [self.hypothesis(x) for x in self.kilometer_list]
 
     def error_list(self):
-        return [pred - y for pred, y in zip(self.prediction_list(), self.price)]
+        return [pred - y for pred, y in zip(self.prediction_list(), self.price_list)]
 
     def gradient_alpha(self):
-        return sum([cost * km for cost, km in zip(self.error_list(), self.km)])
+        return sum([cost * km for cost, km in zip(self.error_list(), self.kilometer_list)])
 
     def gradient_beta(self):
         return sum([cost for cost in self.error_list()])
